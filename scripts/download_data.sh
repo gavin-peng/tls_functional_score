@@ -2,10 +2,9 @@
 # Download public datasets for TLS functional state scoring project.
 #
 # Usage:
-#   bash scripts/download_data.sh all        # download everything
-#   bash scripts/download_data.sh rcc        # GSE175540 only
-#   bash scripts/download_data.sh cosmx      # CosMx NSCLC only
-#   bash scripts/download_data.sh pdac       # GSE205049 only
+#   bash scripts/download_data.sh all          # download everything
+#   bash scripts/download_data.sh rcc          # GSE175540 only
+#   bash scripts/download_data.sh multicancer  # GSE203612 only
 
 set -euo pipefail
 
@@ -65,67 +64,6 @@ EOF
     echo "GSE175540 download complete → $dest"
 }
 
-# ── Dataset: CosMx NSCLC (Figshare) ──────────────────────────────────────────
-download_cosmx() {
-    echo ""
-    echo "=== CosMx NSCLC (Figshare DOI: 10.6084/m9.figshare.25976224.v2) ==="
-    local dest="$DATA_DIR/cosmx_nsclc"
-    mkdir -p "$dest"
-
-    # Direct download of key files from Figshare
-    local figshare_url="https://figshare.com/ndownloader/articles/25976224/versions/2"
-    echo "Downloading CosMx NSCLC dataset from Figshare..."
-    wget -q --show-progress -O "$dest/cosmx_nsclc_v2.zip" "$figshare_url" || {
-        echo "Direct download failed. Try manually:"
-        echo "  https://figshare.com/articles/dataset/CosMx_human_NSCLC/25976224/2"
-        echo "  Download and extract to: $dest/"
-        return 1
-    }
-
-    echo "Extracting..."
-    unzip -q "$dest/cosmx_nsclc_v2.zip" -d "$dest/"
-    rm "$dest/cosmx_nsclc_v2.zip"
-    echo "CosMx NSCLC download complete → $dest"
-}
-
-# ── Dataset: GSE205049 — PDAC Visium (Cancer Cell 2025) ───────────────────────
-download_pdac() {
-    echo ""
-    echo "=== GSE205049: PDAC Visium (Cancer Cell 2025) ==="
-    local dest="$DATA_DIR/GSE205049"
-    mkdir -p "$dest"
-
-    wget -q -r -nH --cut-dirs=5 --no-parent \
-        "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE205nnn/GSE205049/suppl/" \
-        -P "$dest" \
-        --accept "*.tar.gz,*.h5,*.csv,*.tsv,*.gz" \
-        --reject "index.html*" || true
-
-    echo "GSE205049 download complete → $dest"
-}
-
-# ── Dataset: GSE300147 — HNSCC Xenium ─────────────────────────────────────────
-download_hnscc() {
-    echo ""
-    echo "=== GSE300147: HNSCC Xenium ==="
-    local dest="$DATA_DIR/GSE300147"
-    mkdir -p "$dest"
-
-    python - <<EOF
-import GEOparse
-import os
-dest = "$dest"
-os.makedirs(dest, exist_ok=True)
-try:
-    gse = GEOparse.get_GEO(geo="GSE300147", destdir=dest, silent=False)
-    print(f"Found {len(gse.gsms)} samples")
-except Exception as e:
-    print(f"GEOparse error: {e}")
-    print("Manual: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE300147")
-EOF
-    echo "GSE300147 download attempt complete → $dest"
-}
-
 # ── Dataset: GSE203612 — Multi-cancer Visium ─────────────────────────────────
 download_multicancer() {
     echo ""
@@ -157,20 +95,14 @@ python -c "import GEOparse" 2>/dev/null || pip install -q GEOparse
 TARGET="${1:-all}"
 case "$TARGET" in
     rcc)         download_rcc ;;
-    cosmx)       download_cosmx ;;
-    pdac)        download_pdac ;;
-    hnscc)       download_hnscc ;;
     multicancer) download_multicancer ;;
     all)
         download_rcc
-        download_cosmx
-        download_pdac
-        download_hnscc
         download_multicancer
         ;;
     *)
         echo "Unknown target: $TARGET"
-        echo "Usage: bash scripts/download_data.sh [all|rcc|cosmx|pdac|hnscc|multicancer]"
+        echo "Usage: bash scripts/download_data.sh [all|rcc|multicancer]"
         exit 1
         ;;
 esac

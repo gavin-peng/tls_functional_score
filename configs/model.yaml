@@ -1,0 +1,62 @@
+# Model configuration
+
+graph:
+  # Scale 1 -- spot-level spatial graph
+  k_neighbors: 6              # hex grid neighbors for Visium; ~8-12 for CosMx
+  max_distance_um: 200        # max edge distance in microns (prunes long-range)
+
+  # Scale 2 -- niche-level graph (DiffPool k, updated from nb03)
+  n_niches: 5                 # was 20; p25 nodes=22 → 22//4=5 (from nb03 recommendation)
+
+  # Scale 3 -- region-level graph (DiffPool k, updated from nb03)
+  n_region_nodes: 2           # was 5; k_niche//3 → max(2,1)=2 (from nb03 recommendation)
+
+  # Node features
+  expr_pca_dims: 50           # PCA dimensions from expression matrix
+  # NOTE: cell_type_dims removed (no Cell2location output for Visium RCC)
+  # 11 functional score columns added in nb03 instead
+  extra_features:             # functional score columns (from nb03)
+    - "tls_composite_score"
+    - "cxcl13_expression"
+    - "score_b_cell_core"
+    - "score_plasma_output"
+    - "score_tls_chemokines"
+    - "score_t_cell_zone"
+    - "score_tfh"
+    - "score_tregs"
+    - "score_myeloid_sup"
+    - "score_exhaustion"
+    - "score_hev_markers"
+
+gnn:
+  # Scale 1 GAT — updated from nb03 arch_config.json
+  scale1_in_dim: 61           # 50 PCA + 11 functional scores (was 76)
+  scale1_hidden: 128
+  scale1_heads: 4
+  scale1_dropout: 0.2
+
+  # Scale 2 GAT
+  scale2_hidden: 128
+  scale2_heads: 4
+  scale2_dropout: 0.2
+
+  # Scale 3 GAT
+  scale3_hidden: 64
+  scale3_heads: 1
+
+  # Classifier head
+  classifier_hidden: [64, 32]
+  n_classes: 2                # immunogenic, tolerogenic
+  output_activation: "softmax"
+
+transfer:
+  # Domain adaptation
+  use_domain_adaptation: true
+  gradient_reversal_alpha: 1.0
+  domain_classifier_hidden: [64, 32]
+  n_domains: 2                # CosMx, Visium (extendable to more platforms)
+
+  # Feature alignment
+  alignment_loss_weight: 0.1
+  contrastive_loss_weight: 0.1
+  contrastive_temperature: 0.07

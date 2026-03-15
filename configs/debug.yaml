@@ -1,0 +1,47 @@
+# Debug overrides -- applied on top of model.yaml + training.yaml when --debug is passed.
+# Designed to run a full pipeline cycle in ~2-5 minutes on CPU.
+
+graph:
+  k_neighbors: 4
+  n_niches: 5           # was 20
+  n_region_nodes: 3     # was 5
+
+gnn:
+  scale1_in_dim: 76
+  scale1_hidden: 32     # was 128
+  scale1_heads: 2       # was 4
+  scale1_dropout: 0.1
+  scale2_hidden: 32
+  scale2_heads: 2
+  scale3_hidden: 16
+  scale3_heads: 1
+  classifier_hidden: [16]
+  n_classes: 2
+
+transfer:
+  use_domain_adaptation: false   # skip adversarial training in debug
+  gradient_reversal_alpha: 0.0
+  n_domains: 2
+
+training:
+  seed: 42
+  epochs: 3             # was 100
+  batch_size: 4         # was 32
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-4
+  lr_scheduler: "cosine"
+  warmup_epochs: 0
+  task_loss_weight: 1.0
+  domain_loss_weight: 0.0   # off in debug
+  contrastive_loss_weight: 0.0
+  patience: 3
+  monitor_metric: "val_auc"
+  monitor_mode: "max"
+  checkpoint_dir: "checkpoints/debug/"
+
+debug:
+  max_samples: 2          # preprocess only this many Visium samples
+  max_spots_per_sample: 500   # subsample spots for speed
+  max_graphs: 20          # cap TLS graph objects loaded into trainer
+  n_hvg: 500              # fewer HVGs for normalization
+  min_cluster_size: 2     # lower TLS cluster threshold so we get some regions

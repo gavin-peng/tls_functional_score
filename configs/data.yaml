@@ -1,0 +1,117 @@
+# Data configuration
+
+datasets:
+  # High-resolution training datasets (CosMx / Xenium)
+  cosmx_nsclc:
+    name: "CosMx NSCLC"
+    platform: "cosmx"
+    accession: "figshare:10.6084/m9.figshare.25976224.v2"
+    raw_dir: "data/raw/cosmx_nsclc"
+    processed_path: "data/processed/cosmx_nsclc.h5ad"
+    n_genes: 960
+    use_for: ["training", "pseudolabel_generation"]
+
+  hnscc_xenium:
+    name: "HNSCC Xenium"
+    platform: "xenium"
+    accession: "GEO:GSE300147"
+    raw_dir: "data/raw/GSE300147"
+    processed_path: "data/processed/hnscc_xenium.h5ad"
+    n_genes: 477
+    use_for: ["training"]
+
+  breast_xenium:
+    name: "Breast Cancer Xenium"
+    platform: "xenium"
+    accession: "GEO:GSE243280"
+    raw_dir: "data/raw/GSE243280"
+    processed_path: "data/processed/breast_xenium.h5ad"
+    n_genes: 313
+    use_for: ["training", "cross_platform_validation"]
+
+  # Visium clinical validation datasets
+  rcc_visium:
+    name: "RCC Visium (Immunity 2022)"
+    platform: "visium"
+    accession: "GEO:GSE175540"
+    raw_dir: "data/raw/GSE175540"
+    processed_path: "data/processed/rcc_visium.h5ad"
+    has_clinical_outcomes: true
+    clinical_cols: ["icb_response", "progression_free_survival", "overall_survival"]
+    use_for: ["clinical_validation"]
+
+  pdac_visium:
+    name: "PDAC Visium (Cancer Cell 2025)"
+    platform: "visium"
+    accession: "GEO:GSE205049"
+    raw_dir: "data/raw/GSE205049"
+    processed_path: "data/processed/pdac_visium.h5ad"
+    has_clinical_outcomes: false
+    use_for: ["validation"]
+
+  multicancer_visium:
+    name: "Multi-cancer Visium"
+    platform: "visium"
+    accession: "GEO:GSE203612"
+    raw_dir: "data/raw/GSE203612"
+    processed_path: "data/processed/multicancer_visium.h5ad"
+    cancer_types: ["gastric", "ovarian", "breast", "prostate", "kidney", "liver", "colon", "pancreatic", "GIST"]
+    use_for: ["cross_cancer_validation"]
+
+# TLS gene signatures
+tls_signatures:
+  cxcl13_anchor:
+    - "CXCL13"
+
+  b_cell_core:
+    - "MS4A1"   # CD20
+    - "CD19"
+    - "CD79A"
+    - "CD79B"
+
+  germinal_center:
+    - "BCL6"
+    - "AICDA"   # AID -- marks active somatic hypermutation
+    - "MYBL1"
+    - "LMO2"
+    - "MEF2B"
+
+  t_cell_zone:
+    - "CD3D"
+    - "CD3E"
+    - "CCR7"
+    - "SELL"    # CD62L
+
+  tfh:
+    - "CXCR5"
+    - "PDCD1"   # PD-1
+    - "ICOS"
+    - "BTLA"
+
+  plasma_cell_output:
+    - "MZB1"
+    - "SDC1"    # CD138
+    - "IGHG1"
+    - "IGHG2"
+    - "IGHA1"
+    - "JCHAIN"
+
+  hev_markers:
+    - "TNFRSF9"
+    - "GLYCAM1"
+    - "MADCAM1"
+    - "FN1"
+
+  tls_chemokines:
+    - "CCL19"
+    - "CCL21"
+    - "LTB"
+    - "LTBR"
+
+# Immunogenic vs tolerogenic label thresholds
+labeling:
+  gc_score_threshold: 0.3        # min germinal center score for immunogenic
+  treg_fraction_threshold: 0.15  # max Treg fraction for immunogenic
+  plasma_score_threshold: 0.2    # min plasma cell output score
+  min_tls_cells: 50              # min cells in region to label (CosMx)
+  uncertain_buffer: 0.05         # scores within buffer -> uncertain (excluded)

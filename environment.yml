@@ -1,0 +1,41 @@
+name: tls_spatial
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    # Core single-cell / spatial (these install cleanly)
+    - scanpy>=1.10
+    - squidpy>=1.4
+    - anndata>=0.10
+    - spatialdata>=0.2
+    # Spatial statistics
+    - esda>=2.5
+    - libpysal>=4.9
+    # Biology utilities
+    - gseapy>=1.1
+    # Data handling
+    - pandas>=2.0
+    - numpy>=1.26
+    - scipy>=1.12
+    - scikit-learn>=1.4
+    - h5py>=3.10
+    - zarr>=2.17
+    # Survival analysis
+    - lifelines>=0.28
+    # Visualization
+    - matplotlib>=3.8
+    - seaborn>=0.13
+    - tqdm>=4.66
+    # Config / logging
+    - pyyaml>=6.0
+    # GEO data access
+    - GEOparse>=2.0
+    # Notebook
+    - jupyter>=1.0
+    - ipywidgets>=8.0
+    # NOTE: PyTorch + torch-geometric installed separately
+    # Run: bash scripts/install_torch.sh

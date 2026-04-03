@@ -69,7 +69,8 @@ tmp/
 data/processed/
 data/splits/
 
-# Torch / numpy artifacts (large intermediate files)
+# Torch / numpy artifacts (large intermediate files; deposited on Zenodo)
+*.pt
 *.pth
 *.npz
 *.npy

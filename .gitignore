@@ -58,9 +58,9 @@ nb*.log
 
 # Large data (stored on cluster mount or not tracked)
 data/raw/
-data/paper/
 data/processed/
 tmp/
+paper/
 
 # Splits and arch config ARE tracked (small, reproducibility-critical)
 !data/splits/

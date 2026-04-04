@@ -23,7 +23,6 @@ from src.preprocessing.load_visium import load_gse175540
 from src.preprocessing.normalize import normalize_and_reduce, ensure_gene_overlap
 from src.tls_detection.signature_score import score_tls_signatures, score_tolerogenic_signatures
 from src.tls_detection.spatial_correlation import flag_tls_hotspots
-from src.labels.generate_labels import generate_labels_for_sample, attach_labels_to_adata
 
 
 def load_config(path: str) -> dict:

@@ -3,7 +3,8 @@
 Hierarchical GNN (GAT + DiffPool) to classify tertiary lymphoid structures (TLS)
 as immunogenic or tolerogenic from 10x Visium spatial transcriptomics data.
 
-**Paper**: *[title TBD]*
+**Paper**: *A Hierarchical Spatial Graph Neural Network Resolves Immunogenic and Tolerogenic Tertiary
+Lymphoid Structures in Renal Cell Carcinoma*
 
 ---
 
@@ -93,7 +94,7 @@ See **Data** below for how to obtain them.
 ## Data
 
 Raw data is publicly available on GEO. Processed files (graphs, model checkpoint) are
-deposited on Zenodo at **[DOI TBD]**.
+deposited on Zenodo at **[10.5281/zenodo.19412610]**.
 
 ### Option A — Download processed data (recommended)
 
@@ -115,18 +116,54 @@ TLS_DATA_ROOT/
 # Download GSE175540 (RCC Visium, Meylan 2022 Immunity)
 bash scripts/download_data.sh
 
-# Run notebooks 01-03 in order to regenerate all processed files
-# (nb03 writes tls_graphs.pt and arch_config.json to TLS_DATA_ROOT)
+# Then follow the Full Pipeline section below (Stage 1 → Stage 2 → Stage 3)
 ```
 
 ---
 
-## Training
+## Full Pipeline
+
+The complete workflow from raw GEO data to paper figures consists of four stages.
+Run everything from the repo root (`tls_functional_score/`) with the conda
+environment active and `TLS_DATA_ROOT` set.
+
+### Stage 1 — Preprocessing
+
+```bash
+# Full run (all 24 samples, ~24 GB peak RAM — use cluster high-mem node)
+python scripts/preprocess_all.py
+
+# Debug run (2 samples, ~5 min on laptop CPU — sufficient for nb01 visualization)
+python scripts/preprocess_all.py --debug
+```
+
+Writes `data/processed/rcc_visium.h5ad`. Must complete before running any notebook.
+
+### Stage 2 — Data preparation notebooks (required before training)
+
+Run nb01–nb03 **in order**. These are both exploratory and load-bearing: nb03
+writes the files that `train.py` requires.
+
+> **nb01 — always run in debug mode for visualization.**
+> Loading all 24 samples at once produces overlapping spatial scatter plots that
+> are impossible to read. Run `preprocess_all.py --debug` first (2 samples),
+> then open nb01. The full `rcc_visium.h5ad` can still be loaded for the
+> non-spatial cells (QC metrics, score distributions), but all `sc.pl.spatial`
+> and score-on-tissue plots should be run on the debug-preprocessed data.
+
+| Notebook | What it does | Key outputs |
+|---|---|---|
+| nb01 `01_data_exploration.ipynb` | QC, spatial score visualization, sanity-check vs author `TLS_2_cat` labels | Visual only — no file writes |
+| nb02 `02_tls_detection.ipynb` | Tune composite score thresholds (score≥0.20, cxcl13≥0.10), validate AUROC per signature | Visual only — thresholds carried forward to nb03 |
+| nb03 `03_graph_construction.ipynb` | Apply tuned thresholds, pseudo-label TLS clusters, build per-TLS PyG subgraphs, define sample splits | `data/processed/tls_graphs.pt`, `data/processed/rcc_visium_labeled.h5ad`, `data/processed/tls_cluster_labels.csv`, `data/splits/arch_config.json`, `data/splits/sample_splits.json`, `data/splits/graph_splits.json` |
+
+### Stage 3 — Training
 
 ```bash
 TLS_DATA_ROOT=/path/to/data python scripts/train.py
 ```
 
+Reads `tls_graphs.pt` and `arch_config.json` from `TLS_DATA_ROOT` (produced by nb03).
 Outputs saved to `checkpoints/`:
 
 | File | Description |
@@ -140,21 +177,18 @@ Outputs saved to `checkpoints/`:
 Training on a V100 GPU takes ~14 minutes (100 epochs with early stopping).
 CPU training is possible but slow (~2-5 hours).
 
----
+### Stage 4 — Analysis notebooks (paper figures)
 
-## Analysis Notebooks
-
-Run notebooks after training. Each notebook saves figures to `checkpoints/`.
+Run after training completes. Each notebook reads `TLS_DATA_ROOT` from the environment
+and saves figures to `checkpoints/`. Run from the repo root or set `TLS_PROJECT_ROOT`
+if launching from elsewhere.
 
 | Notebook | Purpose | Key outputs |
 |---|---|---|
-| nb04 | Evaluation, UMAP, 5-fold CV | `evaluation_plots.png`, `umap_embeddings.png`, `cv_results.csv` |
-| nb05 | Clinical validation (IgG, cohort, stage) | `clinical_validation.png` |
-| nb06 | Cross-cancer zero-shot transfer (GSE203612) | Spatial TLS maps per sample |
-| nb07 | Bulk TCGA-KIRC survival (KM + Cox) | `km_tcga_kirc.png`, `cox_forest_tcga_kirc.png` |
-
-All notebooks read `TLS_DATA_ROOT` from the environment. Run from the repo root or
-set `TLS_PROJECT_ROOT` if launching from elsewhere.
+| nb04 `04_gnn_training.ipynb` | Evaluation, UMAP, 5-fold CV | `evaluation_plots.png`, `umap_embeddings.png`, `cv_results.csv` |
+| nb05 `05_clinical_validation.ipynb` | Clinical validation (IgG, cohort, stage) | `clinical_validation.png` |
+| nb06 `06_cross_cancer_validation.ipynb` | Cross-cancer zero-shot transfer (GSE203612) | Spatial TLS maps per sample |
+| nb07 `07_tcga_kirc_survival.ipynb` | Bulk TCGA-KIRC survival (KM + Cox) | `km_tcga_kirc.png`, `cox_forest_tcga_kirc.png` |
 
 ---
 

@@ -79,15 +79,21 @@ bash scripts/install_torch.sh cpu      # force CPU-only
 bash scripts/install_torch.sh cu121    # force CUDA 12.1
 ```
 
-### 3. Configure paths
+### 3. Configure paths (scripts only)
+
+`TLS_DATA_ROOT` is only required when running `scripts/train.py` or other scripts
+outside the notebook environment:
 
 ```bash
 cp .env.example .env
-# Edit .env and set TLS_DATA_ROOT to your local data directory
+# Edit .env: set TLS_DATA_ROOT to the directory containing data/processed/ and data/splits/
 ```
 
-`TLS_DATA_ROOT` must point to a directory containing the processed data files.
-See **Data** below for how to obtain them.
+Or pass it inline:
+
+```bash
+TLS_DATA_ROOT=/path/to/data python scripts/train.py
+```
 
 ---
 
@@ -197,13 +203,27 @@ if launching from elsewhere.
 | Metric | Value |
 |---|---|
 | Val AUC-ROC (main split) | 0.718 |
-| 5-fold CV AUC-ROC | 0.512 ± 0.144 |
+| 5-fold CV AUC-ROC | 0.507 ± 0.120 |
 | Clinical AUC (IgG high vs low) | 0.908 |
 | Cross-cancer transfer (GSE203612) | 87 TLS detected, 78% immunogenic |
 
 CV AUC plateau (~0.51) reflects a data limitation: 4 samples hold 94% of tolerogenic
 examples, making cross-patient generalisation the bottleneck rather than model capacity.
 The clinical AUC (0.908) validates discrimination in the full labeled set.
+
+---
+
+## Reproducibility
+
+All scripts and notebooks use `SEED=42`. Exact numerical results may vary slightly across
+hardware and PyTorch versions due to GPU non-determinism and floating-point differences:
+
+- **Val AUC-ROC (0.718) and Clinical AUC (0.908)** are stable across runs.
+- **5-fold CV AUC (~0.51)** varies by ±0.02–0.05 between runs due to the small number
+  of tolerogenic examples per fold; this is expected and does not affect conclusions.
+
+The Zenodo deposit matches the numbers reported in the paper. Independent reproductions
+on different hardware may see small numerical differences but consistent qualitative results.
 
 ---
 

@@ -205,7 +205,7 @@ if launching from elsewhere.
 | Val AUC-ROC (main split) | 0.718 |
 | 5-fold CV AUC-ROC | 0.507 ± 0.120 |
 | Clinical AUC (IgG high vs low) | 0.908 |
-| Cross-cancer transfer (GSE203612) | 87 TLS detected, 78% immunogenic |
+| Cross-cancer transfer (GSE203612) | 55 TLS detected, 85.5% immunogenic |
 
 CV AUC plateau (~0.51) reflects a data limitation: 4 samples hold 94% of tolerogenic
 examples, making cross-patient generalisation the bottleneck rather than model capacity.

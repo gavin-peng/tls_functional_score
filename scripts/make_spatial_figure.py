@@ -16,7 +16,7 @@ import scanpy as sc
 
 ROOT = Path(__file__).resolve().parents[1]
 H5AD  = ROOT / 'data/processed/rcc_visium_labeled.h5ad'
-PREDS = ROOT / 'data/tls_predictions.csv'
+PREDS = ROOT / 'checkpoints/tls_predictions.csv'
 OUT   = ROOT / 'paper/figures/spatial_tls_scores.png'
 
 SAMPLES = [

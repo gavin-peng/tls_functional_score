@@ -69,21 +69,60 @@ download_multicancer() {
     echo ""
     echo "=== GSE203612: Multi-cancer Visium (9 cancer types) ==="
     local dest="$DATA_DIR/GSE203612"
-    mkdir -p "$dest"
+    local base_ftp="https://ftp.ncbi.nlm.nih.gov/geo/series/GSE203nnn/GSE203612/suppl"
 
-    python - <<EOF
-import GEOparse
-import os
-dest = "$dest"
-os.makedirs(dest, exist_ok=True)
-try:
-    gse = GEOparse.get_GEO(geo="GSE203612", destdir=dest, silent=False)
-    print(f"Found {len(gse.gsms)} samples")
-except Exception as e:
-    print(f"GEOparse error: {e}")
-    print("Manual: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE203612")
-EOF
-    echo "GSE203612 download attempt complete → $dest"
+    # Visium-only samples: GSM_ID|sample_name
+    local samples=(
+        "GSM6177599|NYU_BRCA0"
+        "GSM6177601|NYU_BRCA1"
+        "GSM6177603|NYU_BRCA2"
+        "GSM6177607|NYU_GIST1"
+        "GSM6177609|NYU_GIST2"
+        "GSM6177612|NYU_LIHC1"
+        "GSM6177614|NYU_OVCA1"
+        "GSM6177617|NYU_OVCA3"
+        "GSM6177618|NYU_PDAC1"
+        "GSM6177623|NYU_UCEC3"
+    )
+
+    dl() {
+        local url="$1" out="$2"
+        if [[ -f "$out" ]]; then
+            echo "  Already exists: $out"
+        else
+            echo "  Downloading: $(basename "$out")"
+            wget -q --show-progress -O "$out" "$url" || { echo "  FAILED: $url"; rm -f "$out"; }
+        fi
+    }
+
+    for entry in "${samples[@]}"; do
+        local gsm="${entry%%|*}"
+        local name="${entry##*|}"
+        local prefix="${gsm}_NYU_${name##NYU_}_Vis_processed"
+        local sdir="$dest/$name"
+        mkdir -p "$sdir/spatial"
+
+        echo ""
+        echo "=== $name ($gsm) ==="
+
+        dl "${base_ftp}/${prefix}_filtered_feature_bc_matrix.h5" \
+           "$sdir/filtered_feature_bc_matrix.h5"
+
+        for f in tissue_positions_list.csv scalefactors_json.json \
+                  tissue_hires_image.png tissue_lowres_image.png; do
+            local gz="$sdir/spatial/${f}.gz"
+            local out="$sdir/spatial/${f}"
+            if [[ -f "$out" ]]; then
+                echo "  Already exists: $out"
+            else
+                dl "${base_ftp}/${prefix}_spatial_${f}.gz" "$gz"
+                [[ -f "$gz" ]] && gunzip -f "$gz" || true
+            fi
+        done
+
+        echo "  Done: $sdir"
+    done
+    echo "GSE203612 download complete → $dest"
 }
 
 # ── Main ──────────────────────────────────────────────────────────────────────

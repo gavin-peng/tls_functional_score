@@ -1,0 +1,48 @@
+# Training configuration
+
+training:
+  seed: 42
+  epochs: 100
+  batch_size: 32              # number of TLS regions per batch
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-4
+  lr_scheduler: "cosine"      # cosine annealing
+  warmup_epochs: 5
+
+  # Loss weights
+  task_loss_weight: 1.0       # main classification loss
+  domain_loss_weight: 0.1     # domain adversarial loss
+  contrastive_loss_weight: 0.1
+
+  # Early stopping
+  patience: 15
+  monitor_metric: "val_auc"
+  monitor_mode: "max"
+
+  # Checkpointing
+  checkpoint_dir: "checkpoints/"
+  save_top_k: 3
+
+  # Data splits (patient-level)
+  train_frac: 0.70
+  val_frac: 0.15
+  test_frac: 0.15
+  stratify_by: "functional_state"  # balance classes in splits
+
+evaluation:
+  metrics:
+    - "auc_roc"
+    - "auc_pr"
+    - "f1_macro"
+    - "accuracy"
+    - "calibration_ece"
+
+  # Clinical validation settings
+  clinical_test: "log_rank"          # survival analysis test
+  response_threshold: 0.5            # score cutoff for high/low TLS functional state
+  n_bootstrap: 1000                  # bootstrap iterations for CI
+
+logging:
+  use_wandb: false           # set true to enable Weights & Biases logging
+  wandb_project: "tls-functional-score"
+  log_every_n_steps: 10
